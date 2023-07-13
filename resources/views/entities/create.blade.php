@@ -10,6 +10,9 @@
         <div class="min-h-screen bg-gray-100">
             <div  class="grid place-items-center h-screen">
                 <div class="min-h-screen p-6 bg-gray-100 flex items-center justify-center">
+
+                    <div class="absolute top-0 right-0 mt-5 mr-7"><a href="{{ route('auth.user') }}" class="bg-sky-300 py-2 px-3 rounded">Authorization</a></div>
+
                     <div class="container max-w-screen-lg mx-auto">
                     <div>
                         <h2 class="font-semibold text-xl text-gray-600">amoCRM - create an entity</h2>
