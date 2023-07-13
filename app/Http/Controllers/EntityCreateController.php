@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use AmoCRM\Models\LeadModel;
+use App\Helper\AmoCrmHelper;
 use Illuminate\Http\Request;
 use AmoCRM\Models\ContactModel;
 use AmoCRM\Client\AmoCRMApiClient;
@@ -31,12 +32,31 @@ class EntityCreateController extends Controller
             'first_name'  => 'required|string|max:155',
             'second_name' => 'required|string|max:255',
             'address'     => 'required|string|max:155',
-            'phone'       => 'required|number',
+            'phone'       => 'required|numeric',
             'email'       => ['required', 'email', 'max:255'],
-            'age'         => 'required|number',
+            'age'         => 'required|numeric',
         ]);
 
-        dd($request->input('first_name'));
+        $apiClient = AmoCrmHelper::createApiClient();
+
+        try {
+            $contactsService = $apiClient->contacts();
+            
+            $contactModel = new ContactModel();
+            $contactModel->setFirstName($request->input('first_name'));
+            $contactModel->setLastName($request->input('second_name'));
+        
+            $contactsCollection = new ContactsCollection();
+            $contactsCollection->add($contactModel);
+        
+            $contactsService->add($contactsCollection);
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+
+        session()->flash('success', 'New Warehouse created.');
+
+        return redirect()->back();
     }
     
     public function createEntity()
