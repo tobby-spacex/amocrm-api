@@ -1,6 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\TestController;
+use App\Http\Controllers\EntityCreateController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,3 +19,14 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/auth', [AuthController::class, 'authUser']);
+Route::get('/test', [TestController::class, 'test']);
+Route::get('/test2', [TestController::class, 'test2']);
+
+Route::get('/test3', [TestController::class, 'test3']);
+
+Route::get('/auth-callback', [AuthController::class, 'authCallback']);
+
+
+Route::get('/create', [EntityCreateController::class, 'createEntity']);
