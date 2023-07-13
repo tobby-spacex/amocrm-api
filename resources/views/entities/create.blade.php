@@ -26,7 +26,7 @@
                             </div>
                 
                             <div class="lg:col-span-2">
-                             <form method="post" action="{{ route('entiry.store') }}"  enctype="multipart/form-data">
+                             <form method="post" action="{{ route('entity.store') }}"  enctype="multipart/form-data">
                                 @csrf
                                 <div class="grid gap-4 gap-y-2 text-sm grid-cols-1 md:grid-cols-5">
                                 <div class="md:col-span-2">

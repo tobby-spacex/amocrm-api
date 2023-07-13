@@ -47,7 +47,7 @@ class EntityCreateController extends Controller
         
         $accessToken = Cache::get('access_token');
         $refresh_token = Cache::get('refresh_token');
-        $expires = Cache::get('time');
+        $expires = Cache::get('expires');
         $apiClient = new AmoCRMApiClient($clientId, $clientSecret, $redirectUri);
 
         $accessTokenObject = new AccessToken([
@@ -73,29 +73,17 @@ class EntityCreateController extends Controller
 
 
             try {
-                // Получаем сервис для работы с контактами
                 $contactsService = $apiClient->contacts();
             
-                // Создаем экземпляр модели контакта
                 $contactModel = new ContactModel();
-                $contactModel->setFirstName('Peter');
-                $contactModel->setLastName('Bush');
+                $contactModel->setFirstName('Buso');
+                $contactModel->setLastName('Sommit');
             
-                // Создаем коллекцию контактов
                 $contactsCollection = new ContactsCollection();
                 $contactsCollection->add($contactModel);
             
-                // Создаем контакты на сервере
                 $contactsService->add($contactsCollection);
             
-                // Получаем идентификаторы созданных контактов
-                // $createdContactIds = $contactsCollection->getIds();
-            
-                // // Обрабатываем созданные контакты
-                // foreach ($createdContactIds as $contactId) {
-                //     // Обработка созданных контактов
-                //     echo "Создан контакт с ID: $contactId<br>";
-                // }
             } catch (AmoCRMApiException $e) {
                 // Обрабатываем исключение API
                 echo $e->getMessage();
