@@ -30,3 +30,5 @@ Route::get('/auth-callback', [AuthController::class, 'authCallback']);
 
 
 Route::get('/create', [EntityCreateController::class, 'createEntity']);
+Route::get('/entiry/create', [EntityCreateController::class, 'create'])->name('entiry.create');
+Route::post('/entiry', [EntityCreateController::class, 'store'])->name('entiry.store');

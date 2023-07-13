@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use AmoCRM\Models\LeadModel;
+use Illuminate\Http\Request;
 use AmoCRM\Models\ContactModel;
 use AmoCRM\Client\AmoCRMApiClient;
 use AmoCRM\Filters\ContactsFilter;
@@ -14,6 +15,30 @@ use AmoCRM\Collections\Leads\LeadsCollection;
 
 class EntityCreateController extends Controller
 {
+
+    /**
+     * Display the form for creating a new entity.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function create() {
+        return view('entities.create');
+    }
+
+    public function store(Request $request)
+    {
+        $validatedFormData = $request->validate([
+            'first_name'  => 'required|string|max:155',
+            'second_name' => 'required|string|max:255',
+            'address'     => 'required|string|max:155',
+            'phone'       => 'required|number',
+            'email'       => ['required', 'email', 'max:255'],
+            'age'         => 'required|number',
+        ]);
+
+        dd($request->input('first_name'));
+    }
+    
     public function createEntity()
     {
         $clientId = 'f7ac7b4a-b70b-44d5-8659-5e10b3209dc5';
