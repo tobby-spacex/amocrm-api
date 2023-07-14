@@ -11,11 +11,10 @@
             <div  class="grid place-items-center h-screen">
                 <div class="min-h-screen p-6 bg-gray-100 flex items-center justify-center">
 
-                    <div class="absolute top-0 right-0 mt-5 mr-7"><a href="{{ route('auth.user') }}" class="bg-sky-300 py-2 px-3 rounded">Authorization</a></div>
-
+                    <div class="absolute top-0 right-0 mt-5 mr-7"><a href="{{ route('auth.user') }}" class="bg-blue-400 text-white py-2 px-3 rounded">Authorization</a></div>
                     <div class="container max-w-screen-lg mx-auto">
                     <div>
-                        <h2 class="font-semibold text-xl text-gray-600">amoCRM - create an entity</h2>
+                        <h2 class=" flex font-semibold text-xl"><p class="text-sky-600 mr-1">amoCRM </p> - create an entity </h2>
                         <p class="text-gray-500 mb-6">All data will be sent to AmoCrm account. Give it a try.</p>
                 
                         <div class="bg-white rounded shadow-lg p-4 px-4 md:p-8 mb-6">
@@ -26,12 +25,12 @@
                             </div>
                 
                             <div class="lg:col-span-2">
-                             <form method="post" action="{{ route('entity.store') }}"  enctype="multipart/form-data">
+                             <form method="post" action="{{ route('entity.store') }}" id="formId"  enctype="multipart/form-data">
                                 @csrf
                                 <div class="grid gap-4 gap-y-2 text-sm grid-cols-1 md:grid-cols-5">
                                 <div class="md:col-span-2">
                                     <label for="first_name">First Name</label>
-                                    <input type="text" name="first_name" id="full_name" class="h-10 border mt-1 rounded px-4 w-full bg-gray-50" value=""/>
+                                    <input type="text" name="first_name" id="first_name" class="h-10 border mt-1 rounded px-4 w-full bg-gray-50" value=""/>
                                     
                                     @error('first_name')
                                     <p class="text-red-600 text-xs">{{$message}}</p>
@@ -40,15 +39,15 @@
                     
                                 <div class="md:col-span-3">
                                     <label for="second_name">Second Name</label>
-                                    <input type="text" name="second_name" id="email" class="h-10 border mt-1 rounded px-4 w-full bg-gray-50" value=""/>
+                                    <input type="text" name="second_name" id="second_name" class="h-10 border mt-1 rounded px-4 w-full bg-gray-50" value=""/>
                                     @error('second_name')
                                     <p class="text-red-600 text-xs">{{$message}}</p>
                                     @enderror    
                                 </div>
                     
                                 <div class="md:col-span-2">
-                                    <label for="address">Phone</label>
-                                    <input type="text" name="phone" id="address" class="h-10 border mt-1 rounded px-4 w-full bg-gray-50" value="" placeholder="+777 852 58 96"/>
+                                    <label for="phone">Phone</label>
+                                    <input type="text" name="phone" id="phone" class="h-10 border mt-1 rounded px-4 w-full bg-gray-50" value="" placeholder="+777 852 58 96"/>
                                     @error('phone')
                                     <p class="text-red-600 text-xs">{{$message}}</p>
                                     @enderror       
@@ -90,7 +89,7 @@
                             
                                 <div class="md:col-span-5 text-right">
                                     <div class="inline-flex items-end">
-                                        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Submit</button>
+                                        <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Submit</button>
                                     </div>
                                     </div>
                                 </div>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Traits\LeadTrait;
 use AmoCRM\Models\LeadModel;
 use App\Helper\AmoCrmHelper;
 use Illuminate\Http\Request;
@@ -16,7 +17,8 @@ use AmoCRM\Collections\Leads\LeadsCollection;
 
 class EntityCreateController extends Controller
 {
-
+    use LeadTrait;
+    
     /**
      * Display the form for creating a new entity.
      *
@@ -31,7 +33,6 @@ class EntityCreateController extends Controller
         $validatedFormData = $request->validate([
             'first_name'  => 'required|string|max:155',
             'second_name' => 'required|string|max:255',
-            'address'     => 'required|string|max:155',
             'phone'       => 'required|numeric',
             'email'       => ['required', 'email', 'max:255'],
             'age'         => 'required|numeric',
@@ -40,20 +41,30 @@ class EntityCreateController extends Controller
         $apiClient = AmoCrmHelper::createApiClient();
 
         try {
-            $contactsService = $apiClient->contacts();
+            $contact = new ContactModel();
+            $contact->setFirstName($validatedFormData['first_name']);
+            $contact->setLastName($validatedFormData['second_name']);
+ 
+            $contactModel = $apiClient->contacts()->addOne($contact);
             
-            $contactModel = new ContactModel();
-            $contactModel->setFirstName($request->input('first_name'));
-            $contactModel->setLastName($request->input('second_name'));
-        
-            $contactsCollection = new ContactsCollection();
-            $contactsCollection->add($contactModel);
-        
-            $contactsService->add($contactsCollection);
-        } catch (\Throwable $th) {
-            //throw $th;
+            $contact = $apiClient->contacts()->getOne($contactModel->getId());
+  
+            // Use lead create trait
+            $this->createNewLead($apiClient, $contactModel->getId());
+
+        } catch (AmoCRMApiException $e) {
+            // Handle exceptions
+            printError($e);
+            die;
         }
 
+        try {
+            $apiClient->contacts()->updateOne($contact);
+        } catch (AmoCRMApiException $e) {
+            // Handle the exception
+            die($e->getMessage());
+        }
+        
         session()->flash('success', 'New Warehouse created.');
 
         return redirect()->back();
