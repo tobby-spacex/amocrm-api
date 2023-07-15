@@ -4,13 +4,15 @@ namespace App\Traits;
 
 use AmoCRM\Models\LeadModel;
 use AmoCRM\Models\TaskModel;
-use App\Helper\AmoCrmHelper;
 use AmoCRM\Models\ContactModel;
+use AmoCRM\Collections\LinksCollection;
 use AmoCRM\Collections\TasksCollection;
 use AmoCRM\Helpers\EntityTypesInterface;
 use AmoCRM\Exceptions\AmoCRMApiException;
+use AmoCRM\Filters\CatalogElementsFilter;
 use AmoCRM\Collections\ContactsCollection;
 use AmoCRM\Collections\Leads\LeadsCollection;
+use AmoCRM\Collections\CatalogElementsCollection;
 
 trait LeadTrait
 {
@@ -40,12 +42,10 @@ trait LeadTrait
 
     public function createNewLead($apiClient, $contactId)
     {
-        // $apiClient = AmoCrmHelper::createApiClient();
         $leadsService = $apiClient->leads();
         $tasksService = $apiClient->tasks();
 
         $this->lead->setName('Auto deal')
-            ->setPrice(54321)
             ->setContacts(
                 ($this->contactsCollection)
                     ->add(
@@ -58,10 +58,16 @@ trait LeadTrait
         $this->leadsCollection->add($this->lead);
         $leadsService->add($this->leadsCollection);
 
+        // Assign elements to a lead
+        $this->addCatalogElements($apiClient, $this->lead->getId());    
         try {
+            $completeDate = strtotime('+4 weekdays');
+            $completeDateTime = strtotime(date('Y-m-d', $completeDate) . ' 09:00:00');
+
             $this->taskModel->setTaskTypeId(TaskModel::TASK_TYPE_ID_FOLLOW_UP)
                 ->setText('Task to do')
-                ->setCompleteTill(strtotime('+4 days'))
+                ->setCompleteTill($completeDateTime)
+                ->setDuration(9 * 3600) 
                 ->setEntityType(EntityTypesInterface::LEADS)
                 ->setEntityId($this->lead->getId());
             $this->tasksCollection->add($this->taskModel);
@@ -77,6 +83,47 @@ trait LeadTrait
         } catch (AmoCRMApiException $e) {
             printError($e);
             die;
+        }
+    }
+
+    public function addCatalogElements($apiClient, $leadId)
+    {
+        $catalogsCollection = $apiClient->catalogs()->get();
+        $catalog = $catalogsCollection->getBy('name', 'Товары');
+
+        $catalogElementsCollection = new CatalogElementsCollection();
+        $catalogElementsService    = $apiClient->catalogElements($catalog->id);
+        $catalogElementsFilter     = new CatalogElementsFilter();
+        $catalogElementsFilter->setQuery('Product');
+        try {
+            $catalogElementsCollection = $catalogElementsService->get($catalogElementsFilter);
+        } catch (AmoCRMApiException $e) {
+            printError($e);
+            die;
+        }
+        
+        $capElement = $catalogElementsCollection->getBy('name', 'Product Cap');
+        $shirtElement = $catalogElementsCollection->getBy('name', 'Product T-Shirt');
+
+        if ($capElement &&  $shirtElement) {
+            $capElement->setQuantity(10);
+            $shirtElement ->setQuantity(5);
+            try {
+                $lead = $apiClient->leads()->getOne($leadId);
+            } catch (AmoCRMApiException $e) {
+                printError($e);
+                die;
+            }
+        
+            $links = new LinksCollection();
+            $links->add($capElement);
+            $links->add($shirtElement);
+            try {
+                $apiClient->leads()->link($lead, $links);
+            } catch (AmoCRMApiException $e) {
+                printError($e);
+                die;
+            }
         }
     }
 }
