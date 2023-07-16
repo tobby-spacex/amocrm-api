@@ -3,17 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Traits\LeadTrait;
-use AmoCRM\Models\LeadModel;
 use App\Helper\AmoCrmHelper;
 use Illuminate\Http\Request;
 use AmoCRM\Models\ContactModel;
 use AmoCRM\Client\AmoCRMApiClient;
-use AmoCRM\Filters\ContactsFilter;
 use Illuminate\Support\Facades\Cache;
+use AmoCRM\Helpers\EntityTypesInterface;
 use AmoCRM\Exceptions\AmoCRMApiException;
 use AmoCRM\Collections\ContactsCollection;
 use League\OAuth2\Client\Token\AccessToken;
-use AmoCRM\Collections\Leads\LeadsCollection;
+use AmoCRM\Collections\CustomFieldsValuesCollection;
+use AmoCRM\Models\CustomFieldsValues\MultitextCustomFieldValuesModel;
+use AmoCRM\Models\CustomFieldsValues\ValueModels\MultitextCustomFieldValueModel;
+use AmoCRM\Models\CustomFieldsValues\ValueCollections\MultitextCustomFieldValueCollection;
 
 class EntityCreateController extends Controller
 {
@@ -45,6 +47,43 @@ class EntityCreateController extends Controller
             $contact->setFirstName($validatedFormData['first_name']);
             $contact->setLastName($validatedFormData['second_name']);
  
+            $customFields = $apiClient->customFields(EntityTypesInterface::CONTACTS)->get();
+
+            $customFieldsValues = new CustomFieldsValuesCollection();
+
+            $phoneField = $customFields->getBy('code', 'PHONE');
+            $emailField = $customFields->getBy('code', 'EMAIL');
+            
+            if ($phoneField !== null) {
+                $phoneValue = (new MultitextCustomFieldValuesModel())
+                    ->setFieldCode($phoneField->getCode())
+                    ->setValues(
+                        (new MultitextCustomFieldValueCollection())
+                            ->add(
+                                (new MultitextCustomFieldValueModel())
+                                    ->setEnum('WORK')
+                                    ->setValue($validatedFormData['phone'])
+                            )
+                    );
+                $customFieldsValues->add($phoneValue);
+            }
+            
+            if ($emailField !== null) {
+                $emailValue = (new MultitextCustomFieldValuesModel())
+                    ->setFieldCode($emailField->getCode())
+                    ->setValues(
+                        (new MultitextCustomFieldValueCollection())
+                            ->add(
+                                (new MultitextCustomFieldValueModel())
+                                    ->setEnum('WORK')
+                                    ->setValue($validatedFormData['email'])
+                            )
+                    );
+                $customFieldsValues->add($emailValue);
+            }
+
+            $contact->setCustomFieldsValues($customFieldsValues);
+
             $contactModel = $apiClient->contacts()->addOne($contact);
             
             $contact = $apiClient->contacts()->getOne($contactModel->getId());
@@ -58,12 +97,6 @@ class EntityCreateController extends Controller
             die;
         }
 
-        try {
-            $apiClient->contacts()->updateOne($contact);
-        } catch (AmoCRMApiException $e) {
-            // Handle the exception
-            die($e->getMessage());
-        }
         
         session()->flash('success', 'New Warehouse created.');
 
@@ -72,9 +105,9 @@ class EntityCreateController extends Controller
     
     public function createEntity()
     {
-        $clientId = 'f7ac7b4a-b70b-44d5-8659-5e10b3209dc5';
+        $clientId     = 'f7ac7b4a-b70b-44d5-8659-5e10b3209dc5';
         $clientSecret = 'BSCMvnX0MZJBQ1FT3vKWNt12gDlrUcH34iTmCgbaTnibKDElwW0TmlFoOSqScuxH';
-        $redirectUri = 'https://f197-94-158-52-23.ngrok-free.app/auth-callback';
+        $redirectUri  = 'https://f197-94-158-52-23.ngrok-free.app/auth-callback';
         
         $accessToken = Cache::get('access_token');
         $refresh_token = Cache::get('refresh_token');
