@@ -6,6 +6,7 @@ use App\Traits\LeadTrait;
 use App\Helper\AmoCrmHelper;
 use Illuminate\Http\Request;
 use AmoCRM\Models\ContactModel;
+use App\Services\ContactService;
 use AmoCRM\Client\AmoCRMApiClient;
 use Illuminate\Support\Facades\Cache;
 use AmoCRM\Helpers\EntityTypesInterface;
@@ -35,12 +36,20 @@ class EntityCreateController extends Controller
         $validatedFormData = $request->validate([
             'first_name'  => 'required|string|max:155',
             'second_name' => 'required|string|max:255',
-            'phone'       => 'required|numeric',
+            'phone'       => 'required|string',
             'email'       => ['required', 'email', 'max:255'],
             'age'         => 'required|numeric',
         ]);
 
         $apiClient = AmoCrmHelper::createApiClient();
+
+
+        $contactService = new ContactService();
+        $newCustomerCreated = $contactService->checkContactPhoneNumber($apiClient,  $validatedFormData['phone']);
+
+        if ($newCustomerCreated) {
+            return back()->with('message', 'New customer created successfully');
+        }
 
         try {
             $contact = new ContactModel();
@@ -98,9 +107,7 @@ class EntityCreateController extends Controller
         }
 
         
-        session()->flash('success', 'New Warehouse created.');
-
-        return redirect()->back();
+        return back()->with('message', 'New contact with the deal successfully created');
     }
     
     public function createEntity()

@@ -98,6 +98,8 @@
                 </div>
             </div>
         </div>
+
+        <x-flash-message/>
     </body>
 </body>
 </html>
