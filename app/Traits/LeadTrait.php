@@ -44,6 +44,14 @@ trait LeadTrait
     {
         $leadsService = $apiClient->leads();
         $tasksService = $apiClient->tasks();
+        $usersService = $apiClient->users()->get();
+
+        // Rendomly select one user from the account
+        foreach ($usersService as $user) {
+            $userIds[] = $user->getId();
+        }
+        $randomKey = array_rand($userIds);
+        $randomUserId = $userIds[$randomKey];
 
         $this->lead->setName('Auto deal')
             ->setContacts(
@@ -52,9 +60,9 @@ trait LeadTrait
                         ($this->contactModel)
                             ->setId($contactId)
                     )
-            );
-
-        
+            )
+            ->setResponsibleUserId($randomUserId);
+            
         $this->leadsCollection->add($this->lead);
         $leadsService->add($this->leadsCollection);
 
