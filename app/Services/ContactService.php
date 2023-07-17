@@ -112,20 +112,31 @@ class ContactService
         }
         
         if ($phoneExists) {
-            $contact         = $contactsService->getOne($contactId);
+            $contact = $apiClient->contacts()->getOne($contactId, [ContactModel::LEADS]);
+            $contactLeads = $contact->getLeads();
 
-            $customersService = $apiClient->customers();
+            foreach ($contactLeads as $lead) {
+                $leadIds[] = $lead->getId();
+            }
+    
+            foreach($leadIds as $leadid) {
+               $hasSuccessLead = $this->checkLeadSuccessStatus($leadid);
+            }
+
+            if($hasSuccessLead) {
+                $customersService = $apiClient->customers();
           
-            $customer = new CustomerModel();
-            $customer->setName($contact->name);
-            $customer->setNextDate(strtotime('+2 weeks'));
-            
-            try {
-                $customer = $customersService->addOne($customer);
-                return true; 
-            } catch (AmoCRMApiException $e) {
-                printError($e);
-                die;
+                $customer = new CustomerModel();
+                $customer->setName($contact->name);
+                $customer->setNextDate(strtotime('+2 weeks'));
+                
+                try {
+                    $customer = $customersService->addOne($customer);
+                    return true; 
+                } catch (AmoCRMApiException $e) {
+                    printError($e);
+                    die;
+                }
             }
         }
 
@@ -157,5 +168,17 @@ class ContactService
         }
 
         return ($ageField !== null && $genderField !== null);
+    }
+
+    public function checkLeadSuccessStatus($leadId)
+    {
+        $apiClient = AmoCrmHelper::createApiClient();
+        $leadsService = $apiClient->leads()->getOne($leadId);
+
+        if($leadsService->getStatusId() === 142) {
+            return true;
+        }
+        
+        return false;
     }
 }
