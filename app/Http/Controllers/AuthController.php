@@ -20,6 +20,11 @@ class AuthController extends Controller
         $this->amoSubdomain    = env('AMO_SUBDOMAIN');
     }
 
+    /**
+     * Authenticate the user and obtain access token.
+     *
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function authUser()
     {
         $apiClient = new \AmoCRM\Client\AmoCRMApiClient(
@@ -62,6 +67,13 @@ class AuthController extends Controller
         }
     }
 
+    /**
+     * Handle the callback after user authorization and obtain access token.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return void
+     * @throws \Exception
+     */
     public function authCallback(Request $request)
     {
         $code = $request->query('code');
@@ -114,10 +126,6 @@ class AuthController extends Controller
             die('Ошибка: ' . $e->getMessage() . PHP_EOL . 'Код ошибки: ' . $e->getCode());
         }
 
-        /**
-         * Данные получаем в формате JSON, поэтому, для получения читаемых данных,
-         * нам придётся перевести ответ в формат, понятный PHP
-         */
         $response = json_decode($out, true);
 
         $access_token = $response['access_token'];

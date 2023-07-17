@@ -11,6 +11,29 @@ use AmoCRM\Models\CustomFields\TextCustomFieldModel;
 
 class ContactService
 {
+    /**
+     * The AMOCRM API client instance.
+     *
+     * @var \AmoCRM\Client\AmoCRMApiClient
+     */
+    private $apiClient;
+
+    /**
+     * Create a new instance.
+     */
+    public function __construct()
+    {
+        $this->apiClient = AmoCrmHelper::createApiClient();
+    }
+    
+    /**
+     * Check the contact phone number and create a new customer if conditions are met.
+     *
+     * @param \AmoCRM\Client\AmoCRMApiClient $apiClient The AMOCRM API client.
+     * @param string $inputPhone The phone number to check.
+     *
+     * @return bool Returns true if a new customer is created, false otherwise.
+     */
     public function checkContactPhoneNumber($apiClient, $inputPhone)
     {
         $contactsService    = $apiClient->contacts();
@@ -18,6 +41,7 @@ class ContactService
         
         $contactId = null;
         $phoneExists = false;
+        $hasSuccessLead = false;
 
         foreach ($contactsCollection as $contact) {
             $phoneField = $contact->getCustomFieldsValues()->getBy('fieldCode', 'PHONE');
@@ -45,8 +69,11 @@ class ContactService
                 $leadIds[] = $lead->getId();
             }
     
-            foreach($leadIds as $leadid) {
-               $hasSuccessLead = $this->checkLeadSuccessStatus($leadid);
+            foreach($leadIds as $leadId) {
+                if ($this->checkLeadSuccessStatus($leadId)) {
+                    $hasSuccessLead = true;
+                    break;
+                }
             }
 
             if($hasSuccessLead) {
@@ -69,37 +96,49 @@ class ContactService
         return false; // No new customer created
     }
 
+    /**
+     * Check and create custom fields for age and gender if they do not exist.
+     *
+     * @param string $ageKey    The custom field code for age.
+     * @param string $genderKey The custom field code for gender.
+     *
+     * @return bool Returns true if both custom fields exist or are created successfully.
+     */
     public function checkCustomFields($ageKey, $genderKey)
     {
-        $apiClient = AmoCrmHelper::createApiClient();
-
-          $customFields = $apiClient->customFields(EntityTypesInterface::CONTACTS);
-          $ageField     = $customFields->get()->getBy('code', strtoupper($ageKey));
-          $genderField  = $customFields->get()->getBy('code', strtoupper($genderKey));
-          
-          if ($ageField === null) {
-              $ageField = (new TextCustomFieldModel())
-                  ->setCode('AGE')
-                  ->setName('Возраст')
-                  ->setEntityType(EntityTypesInterface::CONTACTS);
-              $customFields->addOne($ageField);
-          }
-
-          if ($genderField === null) {
-            $genderField = (new TextCustomFieldModel())
-                ->setCode('GENDER')
-                ->setName('Пол')
+        $customFields = $this->apiClient->customFields(EntityTypesInterface::CONTACTS);
+        $ageField     = $customFields->get()->getBy('code', strtoupper($ageKey));
+        $genderField  = $customFields->get()->getBy('code', strtoupper($genderKey));
+        
+        if ($ageField === null) {
+            $ageField = (new TextCustomFieldModel())
+                ->setCode('AGE')
+                ->setName('Возраст')
                 ->setEntityType(EntityTypesInterface::CONTACTS);
-            $customFields->addOne($genderField);
+            $customFields->addOne($ageField);
+        }
+
+        if ($genderField === null) {
+        $genderField = (new TextCustomFieldModel())
+            ->setCode('GENDER')
+            ->setName('Пол')
+            ->setEntityType(EntityTypesInterface::CONTACTS);
+        $customFields->addOne($genderField);
         }
 
         return ($ageField !== null && $genderField !== null);
     }
 
+    /**
+     * Check the success status of a lead.
+     *
+     * @param int $leadId The ID of the lead to check.
+     *
+     * @return bool Returns true if the lead has a success status, false otherwise.
+     */
     public function checkLeadSuccessStatus($leadId)
     {
-        $apiClient = AmoCrmHelper::createApiClient();
-        $leadsService = $apiClient->leads()->getOne($leadId);
+        $leadsService = $this->apiClient->leads()->getOne($leadId);
 
         if($leadsService->getStatusId() === 142) {
             return true;

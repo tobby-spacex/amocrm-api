@@ -31,6 +31,13 @@ class EntityCreateController extends Controller
         return view('entities.create');
     }
 
+    /**
+     * Entity creating with the given params
+     *
+     * @param AmoCRM\Client\AmoCRMApiClient $apiClient  The AmoCRM API client.
+     * @param Request $request
+     * @return
+     */
     public function store(Request $request)
     {
         $validatedFormData = $request->validate([
