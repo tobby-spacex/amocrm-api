@@ -133,7 +133,7 @@
         },
         data: JSON.stringify(requestData),
           success: function(response) {
-            console.log(response);
+            alert(response.message);
           },
       });
     });

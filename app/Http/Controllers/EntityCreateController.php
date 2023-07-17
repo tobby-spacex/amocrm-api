@@ -69,7 +69,7 @@ class EntityCreateController extends Controller
         $checkCustomFields =  $contactService->checkCustomFields($ageKey, $genderKey);
 
         if ($newCustomerCreated) {
-            return back()->with('message', 'New customer created successfully');
+            return response()->json(['message' => 'New customer created successfully']);
         }
 
         try {
@@ -154,6 +154,6 @@ class EntityCreateController extends Controller
         }
 
         
-        return back()->with('message', 'New contact with the deal successfully created');
+        return response()->json(['message' => 'New contact with the deal successfully created']);
     }
 }
