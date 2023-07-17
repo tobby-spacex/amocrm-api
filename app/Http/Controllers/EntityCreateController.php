@@ -8,11 +8,8 @@ use Illuminate\Http\Request;
 use AmoCRM\Models\ContactModel;
 use App\Services\ContactService;
 use AmoCRM\Client\AmoCRMApiClient;
-use Illuminate\Support\Facades\Cache;
 use AmoCRM\Helpers\EntityTypesInterface;
 use AmoCRM\Exceptions\AmoCRMApiException;
-use AmoCRM\Collections\ContactsCollection;
-use League\OAuth2\Client\Token\AccessToken;
 use AmoCRM\Collections\CustomFieldsValuesCollection;
 use AmoCRM\Models\CustomFieldsValues\TextCustomFieldValuesModel;
 use AmoCRM\Models\CustomFieldsValues\MultitextCustomFieldValuesModel;
@@ -151,57 +148,5 @@ class EntityCreateController extends Controller
 
         
         return back()->with('message', 'New contact with the deal successfully created');
-    }
-    
-    public function createEntity()
-    {
-        $clientId     = 'f7ac7b4a-b70b-44d5-8659-5e10b3209dc5';
-        $clientSecret = 'BSCMvnX0MZJBQ1FT3vKWNt12gDlrUcH34iTmCgbaTnibKDElwW0TmlFoOSqScuxH';
-        $redirectUri  = 'https://f197-94-158-52-23.ngrok-free.app/auth-callback';
-        
-        $accessToken = Cache::get('access_token');
-        $refresh_token = Cache::get('refresh_token');
-        $expires = Cache::get('expires');
-        $apiClient = new AmoCRMApiClient($clientId, $clientSecret, $redirectUri);
-
-        $accessTokenObject = new AccessToken([
-            'access_token' => $accessToken,
-            'refreshToken' => $refresh_token,
-            'expires' => $expires,
-            'baseDomain' => 'afayziev.amocrm.ru'
-        ]);
-        
-        $apiClient->setAccessToken($accessTokenObject)
-        ->setAccountBaseDomain($accessTokenObject->getValues()['baseDomain'])
-        ->onAccessTokenRefresh(
-            function (\League\OAuth2\Client\Token\AccessTokenInterface $accessTokenObject, string $baseDomain) {
-                saveToken(
-                    [
-                        'accessToken' => $accessTokenObject->getToken(),
-                        'refreshToken' => $accessTokenObject->getRefreshToken(),
-                        'expires' => $accessTokenObject->getExpires(),
-                        'baseDomain' =>  $baseDomain,
-                    ]
-                );
-            });
-
-
-            try {
-                $contactsService = $apiClient->contacts();
-            
-                $contactModel = new ContactModel();
-                $contactModel->setFirstName('Buso');
-                $contactModel->setLastName('Sommit');
-            
-                $contactsCollection = new ContactsCollection();
-                $contactsCollection->add($contactModel);
-            
-                $contactsService->add($contactsCollection);
-            
-            } catch (AmoCRMApiException $e) {
-                // Обрабатываем исключение API
-                echo $e->getMessage();
-            }
-      
     }
 }

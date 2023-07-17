@@ -24,10 +24,6 @@ Route::get('/auth', [AuthController::class, 'authUser'])->name(('auth.user'));
 Route::get('/auth-callback', [AuthController::class, 'authCallback']);
 
 Route::get('/test', [TestController::class, 'test']);
-Route::get('/test2', [TestController::class, 'test2']);
 
-Route::get('/test3', [TestController::class, 'test3']);
-
-Route::get('/create', [EntityCreateController::class, 'createEntity']);
 Route::get('/entity/create', [EntityCreateController::class, 'create'])->name('entity.create');
 Route::post('/entity', [EntityCreateController::class, 'store'])->name('entity.store');
