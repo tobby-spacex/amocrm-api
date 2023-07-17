@@ -2,11 +2,13 @@
 
 namespace App\Services;
 
+use App\Helper\AmoCrmHelper;
 use AmoCRM\Models\ContactModel;
 use AmoCRM\Helpers\EntityTypesInterface;
 use AmoCRM\Exceptions\AmoCRMApiException;
 use AmoCRM\Models\Customers\CustomerModel;
 use AmoCRM\Collections\CustomFieldsValuesCollection;
+use AmoCRM\Models\CustomFields\TextCustomFieldModel;
 use AmoCRM\Models\CustomFieldsValues\MultitextCustomFieldValuesModel;
 use AmoCRM\Models\CustomFieldsValues\ValueModels\MultitextCustomFieldValueModel;
 use AmoCRM\Models\CustomFieldsValues\ValueCollections\MultitextCustomFieldValueCollection;
@@ -128,5 +130,32 @@ class ContactService
         }
 
         return false; // No new customer created
+    }
+
+    public function checkCustomFields($ageKey, $genderKey)
+    {
+        $apiClient = AmoCrmHelper::createApiClient();
+
+          $customFields = $apiClient->customFields(EntityTypesInterface::CONTACTS);
+          $ageField     = $customFields->get()->getBy('code', strtoupper($ageKey));
+          $genderField  = $customFields->get()->getBy('code', strtoupper($genderKey));
+          
+          if ($ageField === null) {
+              $ageField = (new TextCustomFieldModel())
+                  ->setCode('AGE')
+                  ->setName('Возраст')
+                  ->setEntityType(EntityTypesInterface::CONTACTS);
+              $customFields->addOne($ageField);
+          }
+
+          if ($genderField === null) {
+            $genderField = (new TextCustomFieldModel())
+                ->setCode('GENDER')
+                ->setName('Пол')
+                ->setEntityType(EntityTypesInterface::CONTACTS);
+            $customFields->addOne($genderField);
+        }
+
+        return ($ageField !== null && $genderField !== null);
     }
 }

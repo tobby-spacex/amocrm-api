@@ -14,8 +14,11 @@ use AmoCRM\Exceptions\AmoCRMApiException;
 use AmoCRM\Collections\ContactsCollection;
 use League\OAuth2\Client\Token\AccessToken;
 use AmoCRM\Collections\CustomFieldsValuesCollection;
+use AmoCRM\Models\CustomFieldsValues\TextCustomFieldValuesModel;
 use AmoCRM\Models\CustomFieldsValues\MultitextCustomFieldValuesModel;
+use AmoCRM\Models\CustomFieldsValues\ValueModels\TextCustomFieldValueModel;
 use AmoCRM\Models\CustomFieldsValues\ValueModels\MultitextCustomFieldValueModel;
+use AmoCRM\Models\CustomFieldsValues\ValueCollections\TextCustomFieldValueCollection;
 use AmoCRM\Models\CustomFieldsValues\ValueCollections\MultitextCustomFieldValueCollection;
 
 class EntityCreateController extends Controller
@@ -39,13 +42,27 @@ class EntityCreateController extends Controller
             'phone'       => 'required|string',
             'email'       => ['required', 'email', 'max:255'],
             'age'         => 'required|numeric',
+            'gender'      => 'required'  
         ]);
+
+        $ageKey = null;
+        $genderKey = null;
+        foreach ($validatedFormData as $key => $value) {
+            if ($key === 'age') {
+                $ageKey = $key;
+            }
+            if ($key === 'gender') {
+                $genderKey = $key;
+                break;
+            }
+        }
 
         $apiClient = AmoCrmHelper::createApiClient();
 
 
         $contactService = new ContactService();
         $newCustomerCreated = $contactService->checkContactPhoneNumber($apiClient,  $validatedFormData['phone']);
+        $checkCustomFields =  $contactService->checkCustomFields($ageKey, $genderKey);
 
         if ($newCustomerCreated) {
             return back()->with('message', 'New customer created successfully');
@@ -62,7 +79,9 @@ class EntityCreateController extends Controller
 
             $phoneField = $customFields->getBy('code', 'PHONE');
             $emailField = $customFields->getBy('code', 'EMAIL');
-            
+            $ageField = $customFields->getBy('code', 'AGE');
+            $genderField = $customFields->getBy('code', 'GENDER');
+
             if ($phoneField !== null) {
                 $phoneValue = (new MultitextCustomFieldValuesModel())
                     ->setFieldCode($phoneField->getCode())
@@ -91,6 +110,30 @@ class EntityCreateController extends Controller
                 $customFieldsValues->add($emailValue);
             }
 
+            if($checkCustomFields) {
+                $ageValue = (new TextCustomFieldValuesModel())
+                    ->setFieldCode($ageField->getCode())
+                    ->setValues(
+                        (new TextCustomFieldValueCollection())
+                            ->add(
+                                (new TextCustomFieldValueModel())
+                                    ->setValue($validatedFormData['age'])
+                            )
+                    );
+                $customFieldsValues->add($ageValue);
+    
+                $genderValue = (new TextCustomFieldValuesModel())
+                    ->setFieldCode($genderField->getCode())
+                    ->setValues(
+                        (new TextCustomFieldValueCollection())
+                            ->add(
+                                (new TextCustomFieldValueModel())
+                                    ->setValue($validatedFormData['gender'])
+                            )
+                    );
+                $customFieldsValues->add($genderValue);
+            }
+            
             $contact->setCustomFieldsValues($customFieldsValues);
 
             $contactModel = $apiClient->contacts()->addOne($contact);
