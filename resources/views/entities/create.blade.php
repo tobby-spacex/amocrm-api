@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   @vite('resources/css/app.css')
 </head>
-<body>
     <body class="font-sans antialiased">
         <div class="min-h-screen bg-gray-100">
             <div  class="grid place-items-center h-screen">
@@ -25,7 +24,7 @@
                             </div>
                 
                             <div class="lg:col-span-2">
-                             <form method="post" action="{{ route('entity.store') }}" id="formId"  enctype="multipart/form-data">
+                             <form id="formId">
                                 @csrf
                                 <div class="grid gap-4 gap-y-2 text-sm grid-cols-1 md:grid-cols-5">
                                 <div class="md:col-span-2">
@@ -83,11 +82,11 @@
                                     </div>
                                 </div>
                             
-                                <div class="md:col-span-5 text-right">
-                                    <div class="inline-flex items-end">
-                                        <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Submit</button>
+                                <div class = "md:col-span-5 text-right">
+                                   <div class = "inline-flex items-end">
+                                        <button type="submit"  id="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Submit</button>
                                     </div>
-                                    </div>
+                                </div>
                                 </div>
                             </form>
                             </div>
@@ -101,5 +100,42 @@
 
         <x-flash-message/>
     </body>
-</body>
 </html>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.js"></script>
+<script>
+    $('#formId').on('submit', function(event) {
+      event.preventDefault();
+  
+      let first_name  = $('#first_name').val();
+      let second_name = $('#second_name').val();
+      let phone  = $('#phone').val();
+      let email = $('#email').val();
+      let age  = $('#age').val();
+      let gender = $('input[name="gender"]:checked').val();
+
+      
+      let requestData = {
+        first_name : first_name,
+        second_name: second_name,
+        phone      : phone,
+        email      : email,
+        age        : age,
+        gender     : gender
+      };
+  
+      $.ajax({
+        url: "/entity",
+        type: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-TOKEN": "{{ csrf_token() }}"
+        },
+        data: JSON.stringify(requestData),
+          success: function(response) {
+            console.log(response);
+          },
+      });
+    });
+  </script>
+  
