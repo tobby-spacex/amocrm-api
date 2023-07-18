@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\ContactService;
-
+use Validator;
 class EntityCreateController extends Controller
 {
     
@@ -26,7 +26,9 @@ class EntityCreateController extends Controller
      */
     public function store(Request $request)
     {
-        $validatedFormData = $request->validate([
+        $jsonData = $request->json()->all();
+
+        $validator = Validator::make($jsonData, [
             'first_name'  => 'required|string|max:155',
             'second_name' => 'required|string|max:255',
             'phone'       => 'required|string',
@@ -34,9 +36,13 @@ class EntityCreateController extends Controller
             'age'         => 'required|numeric',
             'gender'      => 'required'  
         ]);
+    
+        if ($validator->fails()) {
+			return response()->json(['status'=>'error','message'=>$validator->messages()], 422);
+        }
 
         $contactService = new ContactService();
-        $newCustomerCreated = $contactService->creatNewContactEntity($validatedFormData);
+        $newCustomerCreated = $contactService->createNewContactEntity(json_decode(json_encode($jsonData), true));
 
         if ($newCustomerCreated) {
             return $newCustomerCreated;

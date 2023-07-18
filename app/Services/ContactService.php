@@ -44,7 +44,7 @@ class ContactService
      *
      * @return bool Returns true if a new customer is created, false otherwise.
      */
-    public function creatNewContactEntity($validatedFormData)
+    public function createNewContactEntity($validatedFormData)
     {
         $ageKey = null;
         $genderKey = null;

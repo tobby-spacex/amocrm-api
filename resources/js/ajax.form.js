@@ -33,7 +33,7 @@ $('#formId').on('submit', function(event) {
         error: function(xhr, status, error) {
         // Handle error response
         if (xhr.status === 422) {
-            var responseErrors = xhr.responseJSON.errors;
+            var responseErrors = xhr.responseJSON.message;
             if (responseErrors) {
                 Object.entries(responseErrors).forEach(function([fieldName, fieldErrors]) {
                     if(fieldName == 'first_name') {
