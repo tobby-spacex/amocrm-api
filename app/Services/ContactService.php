@@ -58,9 +58,16 @@ class ContactService
             }
         }
         
-        $contactService = new ContactService();
-        $contactsService    = $this->apiClient->contacts();
-        $contactsCollection = $contactsService->get();
+        $contactService  = new ContactService();
+        $contactsService = $this->apiClient->contacts();
+        
+        try {
+            $contactsCollection = $contactsService->get();
+        } catch (\AmoCRM\Exceptions\AmoCRMApiNoContentException $e) {
+            // Handle the case where there are no contacts available
+            $contactsCollection = collect();
+        }
+
         $checkCustomFields =  $contactService->checkCustomFields($ageKey, $genderKey);
 
         $contactId = null;
