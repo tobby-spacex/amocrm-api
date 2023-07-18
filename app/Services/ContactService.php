@@ -44,7 +44,7 @@ class ContactService
      *
      * @return bool Returns true if a new customer is created, false otherwise.
      */
-    public function checkContactPhoneNumber($validatedFormData)
+    public function creatNewContactEntity($validatedFormData)
     {
         $ageKey = null;
         $genderKey = null;
@@ -107,7 +107,7 @@ class ContactService
             } else {
                   // Use lead create trait
                   $this->createNewLead($this->apiClient, $contactId);
-                  return response()->json(['message' => 'Контакт данному контакту было добавлено новая сделка.']); 
+                  return response()->json(['message' => 'Данному контакту было добавлено новая сделка.']); 
             }
 
             if($hasSuccessLead) {

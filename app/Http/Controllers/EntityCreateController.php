@@ -36,7 +36,7 @@ class EntityCreateController extends Controller
         ]);
 
         $contactService = new ContactService();
-        $newCustomerCreated = $contactService->checkContactPhoneNumber($validatedFormData);
+        $newCustomerCreated = $contactService->creatNewContactEntity($validatedFormData);
 
         if ($newCustomerCreated) {
             return $newCustomerCreated;
