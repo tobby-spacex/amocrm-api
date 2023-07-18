@@ -14,6 +14,7 @@
                     <div class="text-gray-600">
                     <p class="font-medium text-lg">Entity Details</p>
                     <p>Please fill out all the fields.</p>
+                    <div class="mt-5 text-red-400"> Today is {{$date}} </div>
                     </div>
         
                     <div class="lg:col-span-2">

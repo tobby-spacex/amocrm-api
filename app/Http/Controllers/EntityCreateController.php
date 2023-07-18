@@ -28,7 +28,7 @@ class EntityCreateController extends Controller
      * @return \Illuminate\View\View
      */
     public function create() {
-        return view('entities.create');
+        return view('entities.create', ['date' => date("Y-m-d")]);
     }
 
     /**
