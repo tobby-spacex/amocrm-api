@@ -42,9 +42,12 @@ class ContactService
         $contactId = null;
         $phoneExists = false;
         $hasSuccessLead = false;
-
-        foreach ($contactsCollection as $contact) {
-            $phoneField = $contact->getCustomFieldsValues()->getBy('fieldCode', 'PHONE');
+        $phoneField = null;
+        
+        foreach ($contactsCollection as $contact) {            
+            if(!empty($contact->getCustomFieldsValues())) {
+                $phoneField = $contact->getCustomFieldsValues()->getBy('fieldCode', 'PHONE');
+            }
             
             if ($phoneField !== null) {
                 $phoneValues = $phoneField->getValues();
