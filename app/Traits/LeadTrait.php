@@ -16,34 +16,12 @@ use AmoCRM\Collections\CatalogElementsCollection;
 
 trait LeadTrait
 {
-    protected $lead;
-    protected $contactsCollection;
-    protected $contactModel;
-    protected $leadsCollection;
-    protected $tasksCollection;
-    protected $taskModel;
-
-    public function __construct(
-        LeadModel $lead,
-        ContactsCollection $contactsCollection,
-        ContactModel $contactModel,
-        LeadsCollection $leadsCollection,
-        TasksCollection $tasksCollection,
-        TaskModel $taskModel
-    ) 
-    {
-       $this->lead = $lead;
-       $this->contactsCollection = $contactsCollection;
-       $this->contactModel = $contactModel;
-       $this->leadsCollection = $leadsCollection;
-       $this->tasksCollection = $tasksCollection;
-       $this->taskModel = $taskModel;
-    }
-
     public function createNewLead($apiClient, $contactId)
     {
+        $lead = new LeadModel();
+        // $leadsCollection = new LeadsCollection();
         $leadsService = $apiClient->leads();
-        $tasksService = $apiClient->tasks();
+        // $tasksService = $apiClient->tasks();
         $usersService = $apiClient->users()->get();
 
         // Rendomly select one user from the account
@@ -53,36 +31,46 @@ trait LeadTrait
         $randomKey = array_rand($userIds);
         $randomUserId = $userIds[$randomKey];
 
-        $this->lead->setName('Auto deal')
+        $lead->setName('Auto deal')
             ->setContacts(
-                ($this->contactsCollection)
+                (new ContactsCollection())
                     ->add(
-                        ($this->contactModel)
+                        (new ContactModel)
                             ->setId($contactId)
                     )
             )
             ->setResponsibleUserId($randomUserId);
             
-        $this->leadsCollection->add($this->lead);
-        $leadsService->add($this->leadsCollection);
+        $leadsCollection = new LeadsCollection();
+        $leadsCollection->add($lead);
+
+        try {
+            $leadsCollection = $leadsService->add($leadsCollection);
+        } catch (AmoCRMApiException $e) {
+            printError($e);
+            die;
+        }
 
         // Assign elements to a lead
-        $this->addCatalogElements($apiClient, $this->lead->getId());    
+        $this->addCatalogElements($apiClient, $lead->getId());    
         try {
+            $taskModel = new TaskModel();
+            $tasksCollection = new TasksCollection();
+
             $completeDate = strtotime('+4 weekdays');
             $completeDateTime = strtotime(date('Y-m-d', $completeDate) . ' 09:00:00');
 
-            $this->taskModel->setTaskTypeId(TaskModel::TASK_TYPE_ID_FOLLOW_UP)
+            $taskModel->setTaskTypeId(TaskModel::TASK_TYPE_ID_FOLLOW_UP)
                 ->setText('Task to do')
                 ->setCompleteTill($completeDateTime)
                 ->setDuration(9 * 3600) 
                 ->setEntityType(EntityTypesInterface::LEADS)
-                ->setEntityId($this->lead->getId());
-            $this->tasksCollection->add($this->taskModel);
+                ->setEntityId($lead->getId());
+            $tasksCollection->add($taskModel);
             
             $tasksService = $apiClient->tasks();
             try {
-                $tasksCollection = $tasksService->add($this->tasksCollection);
+                $tasksCollection = $tasksService->add($tasksCollection);
             } catch (AmoCRMApiException $e) {
                 print_r($e);
                 die;

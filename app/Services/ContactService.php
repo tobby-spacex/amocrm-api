@@ -2,15 +2,25 @@
 
 namespace App\Services;
 
+use App\Traits\LeadTrait;
 use App\Helper\AmoCrmHelper;
 use AmoCRM\Models\ContactModel;
 use AmoCRM\Helpers\EntityTypesInterface;
 use AmoCRM\Exceptions\AmoCRMApiException;
 use AmoCRM\Models\Customers\CustomerModel;
+use AmoCRM\Collections\CustomFieldsValuesCollection;
 use AmoCRM\Models\CustomFields\TextCustomFieldModel;
+use AmoCRM\Models\CustomFieldsValues\TextCustomFieldValuesModel;
+use AmoCRM\Models\CustomFieldsValues\MultitextCustomFieldValuesModel;
+use AmoCRM\Models\CustomFieldsValues\ValueModels\TextCustomFieldValueModel;
+use AmoCRM\Models\CustomFieldsValues\ValueModels\MultitextCustomFieldValueModel;
+use AmoCRM\Models\CustomFieldsValues\ValueCollections\TextCustomFieldValueCollection;
+use AmoCRM\Models\CustomFieldsValues\ValueCollections\MultitextCustomFieldValueCollection;
 
 class ContactService
 {
+    use LeadTrait;
+    
     /**
      * The AMOCRM API client instance.
      *
@@ -34,11 +44,25 @@ class ContactService
      *
      * @return bool Returns true if a new customer is created, false otherwise.
      */
-    public function checkContactPhoneNumber($apiClient, $inputPhone)
+    public function checkContactPhoneNumber($validatedFormData)
     {
-        $contactsService    = $apiClient->contacts();
-        $contactsCollection = $contactsService->get();
+        $ageKey = null;
+        $genderKey = null;
+        foreach ($validatedFormData as $key => $value) {
+            if ($key === 'age') {
+                $ageKey = $key;
+            }
+            if ($key === 'gender') {
+                $genderKey = $key;
+                break;
+            }
+        }
         
+        $contactService = new ContactService();
+        $contactsService    = $this->apiClient->contacts();
+        $contactsCollection = $contactsService->get();
+        $checkCustomFields =  $contactService->checkCustomFields($ageKey, $genderKey);
+
         $contactId = null;
         $phoneExists = false;
         $hasSuccessLead = false;
@@ -55,7 +79,7 @@ class ContactService
                 if (!empty($phoneValues)) {
                     $phone = $phoneValues[0]->getValue();
                     
-                    if ($phone === $inputPhone) {
+                    if ($phone === $validatedFormData['phone']) {
                         $phoneExists = true;
                         $contactId   = $contact->getId();
                         break;
@@ -65,22 +89,29 @@ class ContactService
         }
         
         if ($phoneExists) {
-            $contact = $apiClient->contacts()->getOne($contactId, [ContactModel::LEADS]);
+            $contact = $this->apiClient->contacts()->getOne($contactId, [ContactModel::LEADS]);
             $contactLeads = $contact->getLeads();
 
-            foreach ($contactLeads as $lead) {
-                $leadIds[] = $lead->getId();
-            }
-    
-            foreach($leadIds as $leadId) {
-                if ($this->checkLeadSuccessStatus($leadId)) {
-                    $hasSuccessLead = true;
-                    break;
+            if(!empty($contactLeads)) {
+                foreach ($contactLeads as $lead) {
+                    $leadIds[] = $lead->getId();
                 }
+        
+                foreach($leadIds as $leadId) {
+                    if ($this->checkLeadSuccessStatus($leadId)) {
+                        $hasSuccessLead = true;
+                        break;
+                    }
+                }
+    
+            } else {
+                  // Use lead create trait
+                  $this->createNewLead($this->apiClient, $contactId);
+                  return response()->json(['message' => 'Контакт данному контакту было добавлено новая сделка.']); 
             }
 
             if($hasSuccessLead) {
-                $customersService = $apiClient->customers();
+                $customersService = $this->apiClient->customers();
           
                 $customer = new CustomerModel();
                 $customer->setName($contact->name);
@@ -88,11 +119,96 @@ class ContactService
                 
                 try {
                     $customer = $customersService->addOne($customer);
-                    return true; 
+                    return response()->json(['message' => 'Покупатель с данным контактом был создан.']); 
                 } catch (AmoCRMApiException $e) {
                     printError($e);
                     die;
                 }
+            } else {
+
+                return response()->json(['message' => 'Контакт с таким номером уже существует']); 
+            }
+        } else {
+            try {
+                $contact = new ContactModel();
+                $contact->setFirstName($validatedFormData['first_name']);
+                $contact->setLastName($validatedFormData['second_name']);
+     
+                $customFields = $this->apiClient->customFields(EntityTypesInterface::CONTACTS)->get();
+    
+                $customFieldsValues = new CustomFieldsValuesCollection();
+    
+                $phoneField = $customFields->getBy('code', 'PHONE');
+                $emailField = $customFields->getBy('code', 'EMAIL');
+                $ageField = $customFields->getBy('code', 'AGE');
+                $genderField = $customFields->getBy('code', 'GENDER');
+    
+                if ($phoneField !== null) {
+                    $phoneValue = (new MultitextCustomFieldValuesModel())
+                        ->setFieldCode($phoneField->getCode())
+                        ->setValues(
+                            (new MultitextCustomFieldValueCollection())
+                                ->add(
+                                    (new MultitextCustomFieldValueModel())
+                                        ->setEnum('WORK')
+                                        ->setValue($validatedFormData['phone'])
+                                )
+                        );
+                    $customFieldsValues->add($phoneValue);
+                }
+                
+                if ($emailField !== null) {
+                    $emailValue = (new MultitextCustomFieldValuesModel())
+                        ->setFieldCode($emailField->getCode())
+                        ->setValues(
+                            (new MultitextCustomFieldValueCollection())
+                                ->add(
+                                    (new MultitextCustomFieldValueModel())
+                                        ->setEnum('WORK')
+                                        ->setValue($validatedFormData['email'])
+                                )
+                        );
+                    $customFieldsValues->add($emailValue);
+                }
+    
+                if($checkCustomFields) {
+                    $ageValue = (new TextCustomFieldValuesModel())
+                        ->setFieldCode($ageField->getCode())
+                        ->setValues(
+                            (new TextCustomFieldValueCollection())
+                                ->add(
+                                    (new TextCustomFieldValueModel())
+                                        ->setValue($validatedFormData['age'])
+                                )
+                        );
+                    $customFieldsValues->add($ageValue);
+        
+                    $genderValue = (new TextCustomFieldValuesModel())
+                        ->setFieldCode($genderField->getCode())
+                        ->setValues(
+                            (new TextCustomFieldValueCollection())
+                                ->add(
+                                    (new TextCustomFieldValueModel())
+                                        ->setValue($validatedFormData['gender'])
+                                )
+                        );
+                    $customFieldsValues->add($genderValue);
+                }
+                
+                $contact->setCustomFieldsValues($customFieldsValues);
+    
+                $contactModel = $this->apiClient->contacts()->addOne($contact);
+                
+                $contact = $this->apiClient->contacts()->getOne($contactModel->getId());
+      
+                // Use lead create trait
+                $this->createNewLead($this->apiClient, $contactModel->getId());
+    
+                return response()->json(['message' => 'Новый контакт со сделкой был создан.']); 
+            } catch (AmoCRMApiException $e) {
+                // Handle exceptions
+                dd($e);
+                die;
             }
         }
 
