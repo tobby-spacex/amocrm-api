@@ -30,42 +30,31 @@
                                 <div class="md:col-span-2">
                                     <label for="first_name">First Name</label>
                                     <input type="text" name="first_name" id="first_name" value="{{old('first_name')}}" class="h-10 border mt-1 rounded px-4 w-full bg-gray-50"/>
-                                    
-                                    @error('first_name')
-                                    <p class="text-red-600 text-xs">{{$message}}</p>
-                                    @enderror
+                                    <p class="text-red-600 text-xs" id="first_name_error" ></p>
                                 </div>
                     
                                 <div class="md:col-span-3">
                                     <label for="second_name">Second Name</label>
                                     <input type="text" name="second_name" id="second_name" value="{{old('second_name')}}" class="h-10 border mt-1 rounded px-4 w-full bg-gray-50" value=""/>
-                                    @error('second_name')
-                                    <p class="text-red-600 text-xs">{{$message}}</p>
-                                    @enderror    
+                                    <p class="text-red-600 text-xs" id="second_name_error"></p>
                                 </div>
                     
                                 <div class="md:col-span-2">
                                     <label for="phone">Phone</label>
                                     <input type="text" name="phone" id="phone" value="{{old('phone')}}" class="h-10 border mt-1 rounded px-4 w-full bg-gray-50" value="" placeholder="+777 852 58 96"/>
-                                    @error('phone')
-                                    <p class="text-red-600 text-xs">{{$message}}</p>
-                                    @enderror       
+                                    <p class="text-red-600 text-xs" id="phone_error"></p>
                                 </div>
                     
                                 <div class="md:col-span-2">
                                     <label for="city">Email</label>
                                     <input type="email" name="email" id="email" value="{{old('email')}}" class="h-10 border mt-1 rounded px-4 w-full bg-gray-50" value="" placeholder="email@domain.com"/>
-                                    @error('email')
-                                    <p class="text-red-600 text-xs">{{$message}}</p>
-                                    @enderror    
+                                    <p class="text-red-600 text-xs" id="email_error"></p>  
                                 </div>
 
                                 <div class="md:col-span-1">
                                     <label for="age">Age</label>
                                     <input type="number" name="age" id="age" value="{{old('age')}}" class="h-10 border mt-1 rounded px-4 w-full bg-gray-50" value=""/>
-                                    @error('age')
-                                    <p class="text-red-600 text-xs">{{$message}}</p>
-                                    @enderror 
+                                    <p class="text-red-600 text-xs" id="age_error"></p>  
                                 </div>
                     
                                 <div class="md:col-span-5">
@@ -134,7 +123,40 @@
         data: JSON.stringify(requestData),
           success: function(response) {
             alert(response.message);
+            location.reload();
           },
+          error: function(xhr, status, error) {
+            // Handle error response
+            if (xhr.status === 422) {
+                var responseErrors = xhr.responseJSON.errors;
+                if (responseErrors) {
+                    Object.entries(responseErrors).forEach(function([fieldName, fieldErrors]) {
+                        if(fieldName == 'first_name') {
+                            let greeting = document.querySelector('#first_name_error');
+                            greeting.innerHTML = fieldErrors
+                        }
+                        if(fieldName == 'second_name') {
+                            let greeting = document.querySelector('#second_name_error');
+                            greeting.innerHTML = fieldErrors
+                        }
+                        if(fieldName == 'phone') {
+                            let greeting = document.querySelector('#phone_error');
+                            greeting.innerHTML = fieldErrors
+                        }
+                        if(fieldName == 'email') {
+                            let greeting = document.querySelector('#email_error');
+                            greeting.innerHTML = fieldErrors
+                        }
+                        if(fieldName == 'age') {
+                            let greeting = document.querySelector('#age_error');
+                            greeting.innerHTML = fieldErrors
+                        }
+                    });
+                }
+            } else {
+                alert('An error occurred: ' + xhr.status + ' ' + error);
+            }
+        }
       });
     });
   </script>
