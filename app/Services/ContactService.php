@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Traits\LeadTrait;
 use App\Helper\AmoCrmHelper;
 use AmoCRM\Models\ContactModel;
+use AmoCRM\Collections\LinksCollection;
 use AmoCRM\Helpers\EntityTypesInterface;
 use AmoCRM\Exceptions\AmoCRMApiException;
 use AmoCRM\Models\Customers\CustomerModel;
@@ -126,7 +127,14 @@ class ContactService
                 
                 try {
                     $customer = $customersService->addOne($customer);
+                    $contact = $contactsService->getOne($contactId);
+                    $contact->setIsMain(false);
+                    $links = new LinksCollection();
+                    $links->add($contact);
+                    $customersService->link($customer, $links);
+
                     return response()->json(['message' => 'Покупатель с данным контактом был создан.']); 
+                    
                 } catch (AmoCRMApiException $e) {
                     printError($e);
                     die;
