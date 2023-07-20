@@ -60,7 +60,6 @@ class ContactService
 
         $contactId = null;
         $phoneExists = false;
-        $phoneField = null;
         
         foreach ($contactsCollection as $contact) {            
             if(!empty($contact->getCustomFieldsValues())) {
