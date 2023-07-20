@@ -215,7 +215,7 @@ class ContactService
             }
         }
 
-        return false; // No new customer created
+        return response()->json(['message' => 'Контакт не был создан создан.']); // No new customer created
     }
 
     /**
@@ -260,13 +260,9 @@ class ContactService
      */
     public function checkLeadSuccessStatus($leadId)
     {
-        $leadsService = $this->apiClient->leads()->getOne($leadId);
+        $lead = $this->apiClient->leads()->getOne($leadId);
 
-        if($leadsService->getStatusId() === 142) {
-            return true;
-        }
-        
-        return false;
+        return $lead->getStatusId() === 142;
     }
 
     /**
@@ -291,7 +287,6 @@ class ContactService
         try {
             $customer = $customersService->addOne($customer);
             $contact = $contactsService->getOne($contactId);
-            $contact->setIsMain(false);
             $links = new LinksCollection();
             $links->add($contact);
             $customersService->link($customer, $links);

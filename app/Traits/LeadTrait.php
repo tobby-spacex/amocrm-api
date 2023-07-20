@@ -19,13 +19,10 @@ trait LeadTrait
     public function createNewLead($apiClient, $contactId)
     {
         $lead = new LeadModel();
-        // $leadsCollection = new LeadsCollection();
-        $leadsService = $apiClient->leads();
-        // $tasksService = $apiClient->tasks();
-        $usersService = $apiClient->users()->get();
+        $usersCollection = $apiClient->users()->get();
 
         // Rendomly select one user from the account
-        foreach ($usersService as $user) {
+        foreach ($usersCollection as $user) {
             $userIds[] = $user->getId();
         }
         $randomKey = array_rand($userIds);
@@ -45,7 +42,7 @@ trait LeadTrait
         $leadsCollection->add($lead);
 
         try {
-            $leadsCollection = $leadsService->add($leadsCollection);
+            $leadsCollection = $apiClient->leads()->add($leadsCollection);
         } catch (AmoCRMApiException $e) {
             printError($e);
             die;
@@ -85,7 +82,7 @@ trait LeadTrait
     public function addCatalogElements($apiClient, $leadId)
     {
         $catalogsCollection = $apiClient->catalogs()->get();
-        $catalog = $catalogsCollection->getBy('name', 'Товары');
+        $catalog = $catalogsCollection->getBy('id', 10701);
 
         $catalogElementsCollection = new CatalogElementsCollection();
         $catalogElementsService    = $apiClient->catalogElements($catalog->id);
