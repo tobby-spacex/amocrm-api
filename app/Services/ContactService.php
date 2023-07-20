@@ -65,7 +65,7 @@ class ContactService
             $contactsCollection = $contactsService->get();
         } catch (\AmoCRM\Exceptions\AmoCRMApiNoContentException $e) {
             // Handle the case where there are no contacts available
-            $contactsCollection = collect();
+            $contactsCollection = [];
         }
 
         $checkCustomFields =  $contactService->checkCustomFields($ageKey, $genderKey);
