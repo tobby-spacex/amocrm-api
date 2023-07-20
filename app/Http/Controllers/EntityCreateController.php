@@ -24,7 +24,7 @@ class EntityCreateController extends Controller
      * @param Request $request
      * @return
      */
-    public function store(Request $request)
+    public function createContactIntity(Request $request)
     {
         $inputData = $request->json()->all();
 

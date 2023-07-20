@@ -21,10 +21,14 @@ trait LeadTrait
         $lead = new LeadModel();
         $usersCollection = $apiClient->users()->get();
 
+        $usersCollection = $apiClient->users()->get();
+
+        $userIds = $usersCollection->pluck('id');
+
         // Rendomly select one user from the account
-        foreach ($usersCollection as $user) {
-            $userIds[] = $user->getId();
-        }
+        // foreach ($usersCollection as $user) {
+        //     $userIds[] = $user->getId();
+        // }
         $randomKey = array_rand($userIds);
         $randomUserId = $userIds[$randomKey];
 
