@@ -42,9 +42,9 @@ class ContactService
      *
      * @param array $validatedFormData form input data.
      *
-     *  @return \Illuminate\Http\JsonResponse
+     *  @return array
      */
-    public function createNewContactEntity(array $validatedFormData): \Illuminate\Http\JsonResponse
+    public function createNewContactEntity(array $validatedFormData): array
     {
 
         $contactsService = $this->apiClient->contacts();
@@ -60,7 +60,6 @@ class ContactService
 
         $contactId = null;
         $phoneExists = false;
-        $hasSuccessLead = false;
         $phoneField = null;
         
         foreach ($contactsCollection as $contact) {            
@@ -70,15 +69,12 @@ class ContactService
             
             if ($phoneField !== null) {
                 $phoneValues = $phoneField->getValues();
-                
-                if (!empty($phoneValues)) {
-                    $phone = $phoneValues[0]->getValue();
-                    
-                    if ($phone === $validatedFormData['phone']) {
-                        $phoneExists = true;
-                        $contactId   = $contact->getId();
-                        break;
-                    }
+                $phoneValue = $phoneValues->pluck('value');
+
+                if (reset($phoneValue) === $validatedFormData['phone']) {
+                    $phoneExists = true;
+                    $contactId   = $contact->getId();
+                    break;
                 }
             }
         }
@@ -93,30 +89,24 @@ class ContactService
 
                 foreach($leadIds as $leadId) {
                     if ($this->checkLeadSuccessStatus($leadId)) {
-                        $hasSuccessLead = true;
-                        break;
+    
+                        try {
+
+                            return $this->createNewCustomerByContact($contactId, $contact->name);
+                        } catch (\Exception $e) {
+        
+                            dd($e->getMessage());
+                        }
+                    } else {
+
+                        return ['message' => 'Контакт с таким номером уже существует']; 
                     }
                 }
     
             } else {
-                  // Use lead create trait
+                    // Use lead create trait
                   $this->createNewLead($this->apiClient, $contactId);
-                  return response()->json(['message' => 'Данному контакту было добавлено новая сделка.']); 
-            }
-
-            if($hasSuccessLead) {
-
-                try {
-
-                    return $this->createNewCustomerByContact($contactsService, $contactId, $contact->name);
-                } catch (\Exception $e) {
-
-                    return $e->getMessage();
-                }
-
-            } else {
-
-                return response()->json(['message' => 'Контакт с таким номером уже существует']); 
+                  return ['message' => 'Данному контакту было добавлено новая сделка.']; 
             }
         } else {
             try {
@@ -194,7 +184,8 @@ class ContactService
                 // Use lead create trait
                 $this->createNewLead($this->apiClient, $contactModel->getId());
     
-                return response()->json(['message' => 'Новый контакт со сделкой был создан.']); 
+                return ['message' => 'Новый контакт со сделкой был создан.'];
+                
             } catch (AmoCRMApiException $e) {
                 // Handle exceptions
                 dd($e);
@@ -202,7 +193,7 @@ class ContactService
             }
         }
 
-        return response()->json(['message' => 'Контакт не был создан создан.']); // No new customer created
+        return ['message' => 'Контакт не был создан создан.']; // No new customer created
     }
 
     /**
@@ -252,30 +243,28 @@ class ContactService
     /**
      * Create new customer based on contact details
      *
-     * @param mixed $contactsService $apiClient->contacts();
-     *
-     * @param int  $contactId contacnt id.
+     * @param int  $contactId contact id.
      * 
      * @param string $contactName contact name.
      * 
-     * @return \Illuminate\Http\JsonResponse
+     * @return array 
      */
-    public function createNewCustomerByContact(\AmoCRM\EntitiesServices\Contacts $contactsService, int $contactId, string $contactName): \Illuminate\Http\JsonResponse
+    public function createNewCustomerByContact(int $contactId, string $contactName): array
     {
         $customersService = $this->apiClient->customers();
-          
+        
         $customer = new CustomerModel();
         $customer->setName($contactName);
         $customer->setNextDate(strtotime('+2 weeks'));
         
         try {
-            $customer = $customersService->addOne($customer);
-            $contact = $contactsService->getOne($contactId);
+            $customer = $this->apiClient->customers()->addOne($customer);
+            $contact = $this->apiClient->contacts()->getOne($contactId);
             $links = new LinksCollection();
             $links->add($contact);
             $customersService->link($customer, $links);
 
-            return response()->json(['message' => 'Покупатель с данным контактом был создан.']); 
+            return ['message' => 'Покупатель с данным контактом был создан.']; 
             
         } catch (AmoCRMApiException $e) {
             printError($e);

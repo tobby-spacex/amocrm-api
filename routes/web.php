@@ -1,8 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\TestController;
 use App\Http\Controllers\EntityCreateController;
 use App\Http\Controllers\IndexController;
 

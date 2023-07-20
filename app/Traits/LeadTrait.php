@@ -72,9 +72,8 @@ trait LeadTrait
                 ->setEntityId($lead->getId());
             $tasksCollection->add($taskModel);
             
-            $tasksService = $apiClient->tasks();
             try {
-                $tasksCollection = $tasksService->add($tasksCollection);
+                $tasksCollection = $apiClient->tasks()->add($tasksCollection);
             } catch (AmoCRMApiException $e) {
                 print_r($e);
                 die;
