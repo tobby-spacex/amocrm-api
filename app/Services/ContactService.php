@@ -58,8 +58,7 @@ class ContactService
 
         $checkCustomFields =  $this->checkCustomFields();
 
-        $contactId = null;
-        $phoneExists = false;
+        $contactId   = null;
         
         foreach ($contactsCollection as $contact) {            
             if(!empty($contact->getCustomFieldsValues())) {
@@ -68,17 +67,16 @@ class ContactService
             
             if ($phoneField !== null) {
                 $phoneValues = $phoneField->getValues();
-                $phoneValue = $phoneValues->pluck('value');
+                $phoneValue = $phoneValues->getBy('value', $validatedFormData['phone']);
 
-                if (reset($phoneValue) === $validatedFormData['phone']) {
-                    $phoneExists = true;
+                if (!empty($phoneValue)) {
                     $contactId   = $contact->getId();
                     break;
                 }
             }
         }
         
-        if ($phoneExists) {
+        if (!empty($contactId)) {
             $contact = $this->apiClient->contacts()->getOne($contactId, [ContactModel::LEADS]);
             $contactLeads = $contact->getLeads();
 
