@@ -40,8 +40,7 @@ class ContactService
     /**
      * Check the contact phone number and create a new customer if conditions are met.
      *
-     * @param \AmoCRM\Client\AmoCRMApiClient $apiClient The AMOCRM API client.
-     * @param string $inputPhone The phone number to check.
+     * @param $validatedFormData form input data.
      *
      * @return bool Returns true if a new customer is created, false otherwise.
      */
@@ -119,26 +118,15 @@ class ContactService
             }
 
             if($hasSuccessLead) {
-                $customersService = $this->apiClient->customers();
-          
-                $customer = new CustomerModel();
-                $customer->setName($contact->name);
-                $customer->setNextDate(strtotime('+2 weeks'));
-                
-                try {
-                    $customer = $customersService->addOne($customer);
-                    $contact = $contactsService->getOne($contactId);
-                    $contact->setIsMain(false);
-                    $links = new LinksCollection();
-                    $links->add($contact);
-                    $customersService->link($customer, $links);
 
-                    return response()->json(['message' => 'Покупатель с данным контактом был создан.']); 
-                    
-                } catch (AmoCRMApiException $e) {
-                    printError($e);
-                    die;
+                try {
+
+                    return $this->createNewCustomerByContact($contactsService, $contactId, $contact->name);
+                } catch (\Exception $e) {
+
+                    return $e->getMessage();
                 }
+
             } else {
 
                 return response()->json(['message' => 'Контакт с таким номером уже существует']); 
@@ -279,5 +267,40 @@ class ContactService
         }
         
         return false;
+    }
+
+    /**
+     * Create new customer based on contact details
+     *
+     * @param mixed $contactsService $apiClient->contacts();
+     *
+     * @param int  $contactId contacnt id.
+     * 
+     * @param string $contactName contact name.
+     * 
+     * @return json responce.
+     */
+    public function createNewCustomerByContact($contactsService, $contactId, $contactName)
+    {
+        $customersService = $this->apiClient->customers();
+          
+        $customer = new CustomerModel();
+        $customer->setName($contactName);
+        $customer->setNextDate(strtotime('+2 weeks'));
+        
+        try {
+            $customer = $customersService->addOne($customer);
+            $contact = $contactsService->getOne($contactId);
+            $contact->setIsMain(false);
+            $links = new LinksCollection();
+            $links->add($contact);
+            $customersService->link($customer, $links);
+
+            return response()->json(['message' => 'Покупатель с данным контактом был создан.']); 
+            
+        } catch (AmoCRMApiException $e) {
+            printError($e);
+            die;
+        }
     }
 }

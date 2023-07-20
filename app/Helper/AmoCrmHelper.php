@@ -12,6 +12,11 @@ class AmoCrmHelper
         $refreshToken = Cache::get('refresh_token');
         $expires      = Cache::get('expires');
 
+        if(empty($accessToken) || empty($refreshToken) || empty($expires)) {
+
+            return response()->json(['message' => 'Something went wrong with token validation']);
+        }
+
         $apiClient = new \AmoCRM\Client\AmoCRMApiClient(env('AMO_CLIENT_ID'), env('AMO_CLIENT_SECRET'), env('AMO_REDIRECT_URL'));
 
         $accessTokenObject = new \League\OAuth2\Client\Token\AccessToken([

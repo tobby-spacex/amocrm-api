@@ -26,9 +26,9 @@ class EntityCreateController extends Controller
      */
     public function store(Request $request)
     {
-        $jsonData = $request->json()->all();
+        $inputData = $request->json()->all();
 
-        $validator = Validator::make($jsonData, [
+        $validator = Validator::make($inputData, [
             'first_name'  => 'required|string|max:155',
             'second_name' => 'required|string|max:255',
             'phone'       => 'required|string',
@@ -42,10 +42,10 @@ class EntityCreateController extends Controller
         }
 
         $contactService = new ContactService();
-        $newCustomerCreated = $contactService->createNewContactEntity(json_decode(json_encode($jsonData), true));
+        $newContactCreated = $contactService->createNewContactEntity($inputData);
 
-        if ($newCustomerCreated) {
-            return $newCustomerCreated;
+        if ($newContactCreated) {
+            return $newContactCreated;
         }
 
         return response()->json(['message' => 'Something went wrong.']);
