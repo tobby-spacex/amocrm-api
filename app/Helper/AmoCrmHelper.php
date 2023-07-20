@@ -2,11 +2,19 @@
 
 namespace App\Helper;
 
+use AmoCRM\Client\AmoCRMApiClient;
 use Illuminate\Support\Facades\Cache;
 
 class AmoCrmHelper
 {
-    public static function createApiClient()
+    /**
+     * Create and configure an instance of the AmoCRMApiClient for API communication.
+     *
+     * @return \AmoCRM\Client\AmoCRMApiClient|null The configured API client instance, or null if the token validation fails.
+     *
+     * @throws \Exception If the required access token, refresh token, or expiration time is missing.
+     */
+    public static function createApiClient(): AmoCRMApiClient
     {
         $accessToken  = Cache::get('access_token');
         $refreshToken = Cache::get('refresh_token');

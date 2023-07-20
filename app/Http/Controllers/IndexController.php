@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\Autherization;
+use Illuminate\Contracts\View\View;
 
 class IndexController
 {
@@ -13,7 +14,7 @@ class IndexController
         $this->autherization = $autherization;
     }
 
-    public function index()
+    public function index(): View
     {
         $this->autherization->authorization();
         return view('welcome');

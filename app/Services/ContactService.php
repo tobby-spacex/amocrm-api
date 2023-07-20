@@ -40,25 +40,13 @@ class ContactService
     /**
      * Check the contact phone number and create a new customer if conditions are met.
      *
-     * @param $validatedFormData form input data.
+     * @param array $validatedFormData form input data.
      *
-     * @return bool Returns true if a new customer is created, false otherwise.
+     *  @return \Illuminate\Http\JsonResponse
      */
-    public function createNewContactEntity($validatedFormData)
+    public function createNewContactEntity(array $validatedFormData): \Illuminate\Http\JsonResponse
     {
-        $ageKey = null;
-        $genderKey = null;
-        foreach ($validatedFormData as $key => $value) {
-            if ($key === 'age') {
-                $ageKey = $key;
-            }
-            if ($key === 'gender') {
-                $genderKey = $key;
-                break;
-            }
-        }
-        
-        $contactService  = new ContactService();
+
         $contactsService = $this->apiClient->contacts();
         
         try {
@@ -68,7 +56,7 @@ class ContactService
             $contactsCollection = [];
         }
 
-        $checkCustomFields =  $contactService->checkCustomFields($ageKey, $genderKey);
+        $checkCustomFields =  $this->checkCustomFields();
 
         $contactId = null;
         $phoneExists = false;
@@ -100,10 +88,9 @@ class ContactService
             $contactLeads = $contact->getLeads();
 
             if(!empty($contactLeads)) {
-                foreach ($contactLeads as $lead) {
-                    $leadIds[] = $lead->getId();
-                }
-        
+
+                $leadIds = $contactLeads->pluck('id');
+
                 foreach($leadIds as $leadId) {
                     if ($this->checkLeadSuccessStatus($leadId)) {
                         $hasSuccessLead = true;
@@ -221,16 +208,13 @@ class ContactService
     /**
      * Check and create custom fields for age and gender if they do not exist.
      *
-     * @param string $ageKey    The custom field code for age.
-     * @param string $genderKey The custom field code for gender.
-     *
      * @return bool Returns true if both custom fields exist or are created successfully.
      */
-    public function checkCustomFields($ageKey, $genderKey)
+    public function checkCustomFields(): bool
     {
         $customFields = $this->apiClient->customFields(EntityTypesInterface::CONTACTS);
-        $ageField     = $customFields->get()->getBy('code', strtoupper($ageKey));
-        $genderField  = $customFields->get()->getBy('code', strtoupper($genderKey));
+        $ageField     = $customFields->get()->getBy('code', strtoupper('AGE'));
+        $genderField  = $customFields->get()->getBy('code', strtoupper('GENDER'));
         
         if ($ageField === null) {
             $ageField = (new TextCustomFieldModel())
@@ -258,7 +242,7 @@ class ContactService
      *
      * @return bool Returns true if the lead has a success status, false otherwise.
      */
-    public function checkLeadSuccessStatus($leadId)
+    public function checkLeadSuccessStatus(int $leadId): bool
     {
         $lead = $this->apiClient->leads()->getOne($leadId);
 
@@ -274,9 +258,9 @@ class ContactService
      * 
      * @param string $contactName contact name.
      * 
-     * @return json responce.
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function createNewCustomerByContact($contactsService, $contactId, $contactName)
+    public function createNewCustomerByContact(\AmoCRM\EntitiesServices\Contacts $contactsService, int $contactId, string $contactName): \Illuminate\Http\JsonResponse
     {
         $customersService = $this->apiClient->customers();
           

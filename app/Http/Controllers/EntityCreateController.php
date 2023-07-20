@@ -13,16 +13,17 @@ class EntityCreateController extends Controller
      *
      * @return \Illuminate\View\View
      */
-    public function create() {
+    public function renderCreateForm() 
+    {
         return view('entities.create', ['date' => date("Y-m-d")]);
     }
 
     /**
      * Entity creating with the given params
      *
-     * @param AmoCRM\Client\AmoCRMApiClient $apiClient  The AmoCRM API client.
-     * @param Request $request
-     * @return
+     * @param Request $request  mixed The result of creating the contact entity or a JSON response in case of validation errors.
+     * 
+     * @return mixed The result of creating the contact entity or a JSON response in case of validation errors.
      */
     public function createContactIntity(Request $request)
     {

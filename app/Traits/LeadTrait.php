@@ -16,19 +16,22 @@ use AmoCRM\Collections\CatalogElementsCollection;
 
 trait LeadTrait
 {
-    public function createNewLead($apiClient, $contactId)
+    /**
+     * Create a new lead for a given contact using the AmoCRM API client.
+     *
+     * @param \AmoCRM\Client\AmoCRMApiClient $apiClient The AmoCRM API client.
+     * @param int $contactId The ID of the contact associated with the new lead.
+     * 
+     * @return void
+     */
+    public function createNewLead(\AmoCRM\Client\AmoCRMApiClient $apiClient, $contactId): void
     {
         $lead = new LeadModel();
         $usersCollection = $apiClient->users()->get();
 
         $usersCollection = $apiClient->users()->get();
-
         $userIds = $usersCollection->pluck('id');
 
-        // Rendomly select one user from the account
-        // foreach ($usersCollection as $user) {
-        //     $userIds[] = $user->getId();
-        // }
         $randomKey = array_rand($userIds);
         $randomUserId = $userIds[$randomKey];
 
@@ -83,7 +86,15 @@ trait LeadTrait
         }
     }
 
-    public function addCatalogElements($apiClient, $leadId)
+    /**
+     * Add catalog elements (products) to a lead using the AmoCRM API client.
+     *
+     * @param \AmoCRM\Client\AmoCRMApiClient $apiClient The AmoCRM API client.
+     * @param int $leadId The ID of the lead to which the catalog elements will be added.
+     * 
+     * @return void
+     */
+    public function addCatalogElements(\AmoCRM\Client\AmoCRMApiClient $apiClient, int $leadId): void
     {
         $catalogsCollection = $apiClient->catalogs()->get();
         $catalog = $catalogsCollection->getBy('id', 10701);

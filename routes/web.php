@@ -19,5 +19,5 @@ use App\Http\Controllers\IndexController;
 
 
 Route::get('/', [IndexController::class, 'index'])->name('auth.user');
-Route::get('/entity/create', [EntityCreateController::class, 'create'])->name('entity.create');
-Route::post('/entity', [EntityCreateController::class, 'store'])->name('entity.store');
+Route::get('/entity/create', [EntityCreateController::class, 'renderCreateForm'])->name('entity.create');
+Route::post('/entity', [EntityCreateController::class, 'createContactIntity'])->name('entity.store');
