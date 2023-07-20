@@ -11,6 +11,7 @@ class AmoCrmHelper
         $accessToken  = Cache::get('access_token');
         $refreshToken = Cache::get('refresh_token');
         $expires      = Cache::get('expires');
+        $baseDomain   = Cache::get('baseDomain');
 
         if(empty($accessToken) || empty($refreshToken) || empty($expires)) {
 
@@ -23,7 +24,7 @@ class AmoCrmHelper
             'access_token' => $accessToken,
             'refresh_token' => $refreshToken,
             'expires' => $expires,
-            'baseDomain' => 'afayziev.amocrm.ru',
+            'baseDomain' => $baseDomain,
         ]);
 
         $apiClient->setAccessToken($accessTokenObject)

@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TestController;
 use App\Http\Controllers\EntityCreateController;
+use App\Http\Controllers\IndexController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,14 +17,7 @@ use App\Http\Controllers\EntityCreateController;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
 
-Route::get('/auth', [AuthController::class, 'authUser'])->name(('auth.user'));
-Route::get('/auth-callback', [AuthController::class, 'authCallback']);
-
-Route::get('/test', [TestController::class, 'test']);
-
+Route::get('/', [IndexController::class, 'index'])->name('auth.user');
 Route::get('/entity/create', [EntityCreateController::class, 'create'])->name('entity.create');
 Route::post('/entity', [EntityCreateController::class, 'store'])->name('entity.store');
