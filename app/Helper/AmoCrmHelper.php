@@ -21,7 +21,7 @@ class AmoCrmHelper
         $expires      = Cache::get('expires');
         $baseDomain   = Cache::get('baseDomain');
 
-        if(empty($accessToken) || empty($refreshToken) || empty($expires)) {
+        if(empty($accessToken) || empty($refreshToken) || empty($expires) || empty($baseDomain)) {
 
             return response()->json(['message' => 'Something went wrong with token validation']);
         }

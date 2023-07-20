@@ -77,6 +77,8 @@ class Autherization
 
     /**
      * Save token in cache
+     * 
+     * @param array $accessToken details
      */
     public function saveToken(array $accessToken): void
     {
